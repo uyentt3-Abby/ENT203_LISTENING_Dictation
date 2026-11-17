@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top Notch 2 – Dictation & Question Builder (A1–A2)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Nunito & Plus Jakarta Sans for clean, large classroom readability -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Tone.js for gentle UI audio feedback -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        display: ['"Nunito"', 'sans-serif'],
+                    },
+                    animation: {
+                        'pop-in': 'popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+                        'slide-up': 'slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'shake': 'shake 0.4s cubic-bezier(.36,.07,.19,.97) both',
+                    },
+                    keyframes: {
+                        popIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.85) translateY(6px)' },
+                            '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(14px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        shake: {
+                            '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
+                            '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
+                            '30%, 50%, 70%': { transform: 'translate3d(-3px, 0, 0)' },
+                            '40%, 60%': { transform: 'translate3d(3px, 0, 0)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background: linear-gradient(125deg, #E8DEFF 0%, #D9EEFF 28%, #D8F7EA 56%, #FFE8DC 82%, #FFDCE6 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .glass-panel {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.90) 0%, rgba(250, 248, 255, 0.88) 50%, rgba(244, 252, 255, 0.90) 100%);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1.5px solid rgba(255, 255, 255, 0.95);
+            box-shadow: 0 12px 32px -12px rgba(91, 75, 138, 0.12), 0 4px 14px -6px rgba(43, 88, 118, 0.08);
+        }
+
+        .word-chip {
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .word-chip:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px -4px rgba(100, 116, 139, 0.16);
+        }
+
+        .word-chip:active {
+            transform: scale(0.96);
+        }
+
+        /* Custom subtle scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(167, 139, 250, 0.45);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(139, 92, 246, 0.65);
+        }
+    </style>
+</head>
+<body class="text-slate-700 font-sans antialiased flex flex-col justify-between p-3 sm:p-5 md:p-7">
+
+    <!-- Top Navigation & Classroom Controls -->
+    <header class="max-w-6xl w-full mx-auto mb-4 sm:mb-6">
+        <div class="glass-panel rounded-3xl p-4 sm:px-7 sm:py-4 flex flex-wrap items-center justify-between gap-4">
+            <!-- Brand & Title -->
+            <div class="flex items-center gap-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-400 via-purple-400 to-pink-400 flex items-center justify-center text-white shadow-sm">
+                    <i class="fa-solid fa-headphones-simple text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-display font-black text-xl sm:text-2xl md:text-3xl tracking-tight text-slate-800">
+                        Dictation & Question Builder <span class="text-sm sm:text-base font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700 align-middle ml-1">A1–A2</span>
+                    </h1>
+                    <p class="text-xs sm:text-sm font-semibold text-slate-500">Nghe audio, ghi lại câu hỏi và kiểm tra ngữ pháp (Units 1–10)</p>
+                </div>
+            </div>
+
+            <!-- Classroom Utility Controls -->
+            <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <!-- Score Pill -->
+                <div class="flex items-center gap-2 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 px-4 py-2 rounded-2xl">
+                    <i class="fa-solid fa-star text-amber-400 text-lg"></i>
+                    <span class="font-display font-extrabold text-lg sm:text-xl text-amber-900" id="score-display">0 / 50</span>
+                </div>
+
+                <!-- Sound Toggle -->
+                <button id="sound-btn" onclick="toggleSound()" title="Bật / Tắt âm thanh phản hồi" class="p-3 rounded-2xl bg-sky-50/90 hover:bg-sky-100 border border-sky-200/80 text-sky-700 transition active:scale-95">
+                    <i class="fa-solid fa-volume-high text-lg" id="sound-icon"></i>
+                </button>
+
+                <!-- Font Size / Projector Zoom Toggle -->
+                <button id="zoom-btn" onclick="toggleProjectorMode()" title="Chế độ máy chiếu (Chữ siêu lớn)" class="p-3 rounded-2xl bg-emerald-50/90 hover:bg-emerald-100 border border-emerald-200/80 text-emerald-700 transition active:scale-95 flex items-center gap-1.5 font-bold text-sm">
+                    <i class="fa-solid fa-magnifying-glass-plus text-lg"></i>
+                    <span class="hidden md:inline" id="zoom-label">Chữ lớn</span>
+                </button>
+
+                <!-- Question List Drawer Toggle -->
+                <button onclick="toggleQuestionModal()" class="p-3 px-4 rounded-2xl bg-gradient-to-r from-purple-100 to-pink-100 hover:from-purple-200/80 hover:to-pink-200/80 border border-purple-200/80 text-purple-800 font-bold text-sm sm:text-base transition active:scale-95 flex items-center gap-2">
+                    <i class="fa-solid fa-list-ol"></i>
+                    <span>Danh sách 50 câu</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Unit Quick Filter Bar -->
+        <div class="mt-3 flex items-center gap-2 overflow-x-auto pb-1.5 no-scrollbar" id="unit-filter-bar">
+            <!-- Populated by JS -->
+        </div>
+    </header>
+
+    <!-- Main Interactive Stage -->
+    <main class="max-w-6xl w-full mx-auto flex-1 flex flex-col justify-center">
+        <div id="question-card" class="glass-panel rounded-[2rem] p-5 sm:p-8 md:p-10 transition-all duration-300 animate-slide-up">
+            
+            <!-- Top Metadata Bar: Question Number, Unit Badge, Grammar Point -->
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-purple-100">
+                <div class="flex items-center gap-3 flex-wrap">
+                    <span id="q-number-badge" class="px-4 py-1.5 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-display font-black text-lg sm:text-xl shadow-sm">
+                        Câu 1 / 50
+                    </span>
+                    <span id="unit-badge" class="px-4 py-1.5 rounded-2xl bg-sky-100/80 text-sky-800 font-bold text-sm sm:text-base border border-sky-200">
+                        Unit 1: Getting Acquainted
+                    </span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-400">Ngữ pháp:</span>
+                    <span id="grammar-badge" class="px-3.5 py-1.5 rounded-xl bg-rose-100/70 text-rose-800 font-bold text-sm sm:text-base border border-rose-200">
+                        Present Perfect (Ever)
+                    </span>
+                </div>
+            </div>
+
+            <!-- Audio Dictation Player & Meaning Toggle Bar -->
+            <div class="mb-6 bg-gradient-to-r from-purple-50/80 via-sky-50/80 to-emerald-50/80 rounded-3xl p-4 sm:p-6 border border-purple-200/60 flex flex-col gap-4">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <!-- Audio Controls -->
+                    <div class="flex items-center gap-3 sm:gap-4 flex-wrap">
+                        <button onclick="playSentenceAudio(1.0)" id="play-audio-btn" class="px-5 py-3.5 sm:px-6 sm:py-4 rounded-2xl bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-600 hover:to-indigo-600 text-white font-display font-extrabold text-base sm:text-lg shadow-sm transition active:scale-95 flex items-center gap-3">
+                            <i class="fa-solid fa-volume-high text-xl" id="audio-btn-icon"></i>
+                            <span id="audio-btn-text">Nghe câu hỏi (Chuẩn)</span>
+                        </button>
+
+                        <button onclick="playSentenceAudio(0.75)" id="play-slow-btn" class="px-4 py-3.5 sm:px-5 sm:py-4 rounded-2xl bg-white/95 hover:bg-purple-50 text-purple-800 border border-purple-200 font-display font-bold text-sm sm:text-base shadow-sm transition active:scale-95 flex items-center gap-2" title="Nghe tốc độ chậm để chép chính tả">
+                            <i class="fa-solid fa-gauge-simple-low text-purple-500"></i>
+                            <span>Nghe chậm (0.75x)</span>
+                        </button>
+                    </div>
+
+                    <!-- Mode Switcher & Meaning Reveal -->
+                    <div class="flex items-center gap-2.5 flex-wrap">
+                        <button onclick="toggleInputMode()" id="mode-toggle-btn" class="px-4 py-2.5 rounded-xl bg-white/95 hover:bg-teal-50 text-teal-800 border border-teal-200 font-bold text-sm sm:text-base shadow-sm transition active:scale-95 flex items-center gap-2">
+                            <i class="fa-solid fa-keyboard text-teal-500"></i>
+                            <span id="mode-toggle-label">Chế độ: Gõ chép chính tả</span>
+                        </button>
+
+                        <button onclick="toggleMeaningHint()" id="meaning-toggle-btn" class="px-4 py-2.5 rounded-xl bg-white/95 hover:bg-orange-50 text-orange-800 border border-orange-200 font-bold text-sm sm:text-base shadow-sm transition active:scale-95 flex items-center gap-2">
+                            <i class="fa-solid fa-language text-orange-500"></i>
+                            <span id="meaning-toggle-label">Hiện nghĩa tiếng Việt</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Collapsible Vietnamese Meaning Box (Hidden by default for true listening practice) -->
+                <div id="vietnamese-meaning-box" class="hidden pt-3 border-t border-purple-200/60 flex items-center gap-3 animate-slide-up">
+                    <span class="px-2.5 py-1 rounded-lg bg-orange-100 text-orange-700 font-extrabold text-xs uppercase tracking-wider">Nghĩa gợi ý</span>
+                    <p id="vietnamese-meaning" class="font-display font-bold text-lg sm:text-xl text-slate-700">
+                        Bạn đã từng thử nhảy dù hoặc lặn biển chưa?
+                    </p>
+                </div>
+            </div>
+
+            <!-- MODE A: DICTATION TYPING ZONE (Default for Listening & Writing down) -->
+            <div id="dictation-mode-container" class="mb-8">
+                <div class="flex items-center justify-between mb-2">
+                    <label for="dictation-input" class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-pen-nib text-indigo-400"></i> Nghe và ghi lại câu hỏi tiếng Anh (Nhấn Enter để kiểm tra):
+                    </label>
+                    <button onclick="clearDictationInput()" class="text-xs sm:text-sm font-bold text-rose-500 hover:text-rose-700 flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-rose-50 transition">
+                        <i class="fa-solid fa-eraser"></i> Xóa ô nhập
+                    </button>
+                </div>
+                <textarea id="dictation-input" rows="2" placeholder="Nghe audio phía trên và gõ lại chính xác câu bạn nghe được..."
+                    class="w-full rounded-3xl bg-white/95 border-2 border-purple-200 focus:border-purple-400 focus:outline-none p-5 sm:p-6 font-display font-bold text-xl sm:text-2xl md:text-3xl text-slate-800 placeholder:text-slate-300 placeholder:font-semibold transition shadow-inner resize-none"></textarea>
+            </div>
+
+            <!-- MODE B: WORD TILE SCRAMBLE ZONE (Optional scaffolding mode) -->
+            <div id="scramble-mode-container" class="hidden">
+                <!-- Answer Construction Dropzone -->
+                <div class="mb-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-arrow-turn-down"></i> Ghép các từ theo đúng trật tự câu hỏi:
+                        </span>
+                        <button onclick="resetCurrentSentence()" class="text-xs sm:text-sm font-bold text-rose-500 hover:text-rose-700 flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-rose-50 transition">
+                            <i class="fa-solid fa-rotate-left"></i> Xóa làm lại
+                        </button>
+                    </div>
+
+                    <div id="answer-zone" class="min-h-[96px] sm:min-h-[112px] rounded-3xl bg-white/95 border-2 border-dashed border-purple-200 p-4 sm:p-5 flex flex-wrap items-center gap-2.5 sm:gap-3.5 transition-colors">
+                        <span id="answer-placeholder" class="text-slate-300 font-display font-bold text-lg sm:text-xl select-none mx-auto">
+                            Nhấn vào các thẻ từ bên dưới để ghép câu...
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Word Bank Pool -->
+                <div class="mb-8">
+                    <div class="flex items-center justify-between mb-2.5">
+                        <span class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-400">
+                            Các từ gợi ý:
+                        </span>
+                        <button onclick="giveNextWordHint()" id="hint-btn" class="text-xs sm:text-sm font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition active:scale-95">
+                            <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> Gợi ý từ tiếp theo
+                        </button>
+                    </div>
+                    <div id="word-bank" class="min-h-[84px] rounded-3xl bg-purple-50/60 p-4 sm:p-5 border border-purple-100 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3.5">
+                        <!-- Word chips rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feedback & Vietnamese Grammar Explanation Box -->
+            <div id="feedback-box" class="hidden mb-7 rounded-3xl p-5 sm:p-6 border transition-all animate-slide-up">
+                <div class="flex items-start gap-4">
+                    <div id="feedback-icon-wrap" class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-2xl">
+                        <i id="feedback-icon" class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 id="feedback-title" class="font-display font-black text-xl sm:text-2xl mb-1">Chính xác!</h3>
+                        <p id="feedback-correct-sentence" class="font-display font-extrabold text-lg sm:text-xl text-slate-800 mb-2"></p>
+                        <div class="bg-white/85 rounded-2xl p-4 border border-slate-200/70">
+                            <p class="text-xs font-extrabold uppercase tracking-wider text-purple-600 mb-1">
+                                <i class="fa-solid fa-lightbulb mr-1"></i> Giải thích ngữ pháp & từ vựng:
+                            </p>
+                            <p id="feedback-explanation" class="text-base sm:text-lg font-medium text-slate-700 leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Controls Footer -->
+            <div class="flex flex-wrap items-center justify-between gap-4 pt-2">
+                <!-- Previous Button -->
+                <button onclick="prevQuestion()" id="prev-btn" class="px-5 py-3.5 sm:px-6 sm:py-4 rounded-2xl bg-purple-50/90 hover:bg-purple-100 text-purple-800 border border-purple-200 font-display font-extrabold text-base sm:text-lg shadow-sm transition active:scale-95 flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Câu trước</span>
+                </button>
+
+                <!-- Center Primary Action Buttons -->
+                <div class="flex items-center gap-3 sm:gap-4 flex-1 sm:flex-initial justify-center">
+                    <button onclick="checkAnswer()" id="check-btn" class="w-full sm:w-auto px-8 py-4 sm:px-10 sm:py-4 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white font-display font-black text-lg sm:text-xl shadow-md transition transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2.5">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Kiểm tra đáp án</span>
+                    </button>
+
+                    <button onclick="revealAnswer()" id="reveal-btn" title="Hiện đáp án mẫu" class="px-4 py-4 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-display font-bold text-base sm:text-lg transition active:scale-95 flex items-center gap-2">
+                        <i class="fa-solid fa-eye"></i>
+                        <span class="hidden md:inline">Đáp án</span>
+                    </button>
+                </div>
+
+                <!-- Next Button -->
+                <button onclick="nextQuestion()" id="next-btn" class="px-5 py-3.5 sm:px-6 sm:py-4 rounded-2xl bg-gradient-to-r from-teal-400 to-emerald-500 hover:from-teal-500 hover:to-emerald-600 text-white font-display font-extrabold text-base sm:text-lg shadow-sm transition active:scale-95 flex items-center gap-2">
+                    <span>Câu tiếp theo</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Progress Bar Footer -->
+    <footer class="max-w-6xl w-full mx-auto mt-4 sm:mt-6">
+        <div class="glass-panel rounded-2xl p-3 sm:px-6 flex items-center gap-4">
+            <span class="text-xs sm:text-sm font-extrabold text-purple-700 whitespace-nowrap" id="progress-text">Tiến độ: 2%</span>
+            <div class="w-full bg-purple-100/80 h-3 rounded-full overflow-hidden p-0.5">
+                <div id="progress-bar" class="h-full rounded-full bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 transition-all duration-500" style="width: 2%"></div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal: All 50 Questions Navigator -->
+    <div id="question-modal" class="fixed inset-0 z-50 hidden bg-slate-900/35 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white/95 rounded-[2rem] max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-purple-100 overflow-hidden animate-pop-in">
+            <div class="p-5 sm:p-6 border-b border-purple-100 flex items-center justify-between bg-gradient-to-r from-purple-50/70 via-sky-50/70 to-pink-50/70">
+                <div>
+                    <h2 class="font-display font-black text-xl sm:text-2xl text-slate-800">Danh sách 50 câu hỏi luyện nghe (Units 1–10)</h2>
+                    <p class="text-sm text-slate-500 font-medium">Chọn câu bất kỳ để trình chiếu trên lớp</p>
+                </div>
+                <button onclick="toggleQuestionModal()" class="w-10 h-10 rounded-full bg-white hover:bg-rose-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-rose-500 transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div id="modal-grid" class="p-5 sm:p-6 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // CURRICULUM DATA: 50 NEW DICTATION & QUESTION BUILDER ITEMS (TOP NOTCH 2)
+        // =========================================================================
+        const questionsData = [
+            // UNIT 1: Getting Acquainted (Present Perfect: ever, yet, before, already; Tourist activities & customs)
+            {
+                id: 1, unit: 1, unitTitle: "Unit 1: Getting Acquainted",
+                grammar: "Present Perfect (Ever)",
+                sentence: "Have you ever tried paragliding or scuba diving?",
+                vietnamese: "Bạn đã từng thử nhảy dù hoặc lặn biển chưa?",
+                explanation: "Câu hỏi trải nghiệm dùng thì Hiện tại hoàn thành: 'Have + you + ever + V3/ed (tried)...?' với các hoạt động du lịch (paragliding, scuba diving) trong Unit 1."
+            },
+            {
+                id: 2, unit: 1, unitTitle: "Unit 1: Getting Acquainted",
+                grammar: "Present Perfect (Yet)",
+                sentence: "Has she been to the top of the Eiffel Tower yet?",
+                vietnamese: "Cô ấy đã lên đỉnh tháp Eiffel chưa?",
+                explanation: "Dùng 'Has + S + been to + địa điểm + yet?' để hỏi xem ai đó đã hoàn thành trải nghiệm du lịch tính đến hiện tại chưa."
+            },
+            {
+                id: 3, unit: 1, unitTitle: "Unit 1: Getting Acquainted",
+                grammar: "Present Perfect (Before)",
+                sentence: "Have they ever greeted a visitor with a bow before?",
+                vietnamese: "Trước đây họ đã từng chào đón khách bằng cách cúi đầu chưa?",
+                explanation: "Trạng từ 'before' thường đứng cuối câu hỏi Hiện tại hoàn thành để nhấn mạnh trải nghiệm trong quá khứ (customs & gestures)."
+            },
+            {
+                id: 4, unit: 1, unitTitle: "Unit 1: Getting Acquainted",
+                grammar: "Present Perfect (Wh-Question)",
+                sentence: "Which famous sightseeing tours have you taken this year?",
+                vietnamese: "Bạn đã tham gia những tour tham quan nổi tiếng nào trong năm nay?",
+                explanation: "Câu hỏi Wh- ở thì Hiện tại hoàn thành: 'Which + danh từ + have/has + S + V3/ed (taken)?'."
+            },
+            {
+                id: 5, unit: 1, unitTitle: "Unit 1: Getting Acquainted",
+                grammar: "Present Perfect (Already)",
+                sentence: "Have you already taken a photo with the tour guide?",
+                vietnamese: "Bạn đã chụp ảnh cùng hướng dẫn viên du lịch rồi phải không?",
+                explanation: "'Already' đứng ngay sau chủ ngữ trong câu hỏi Hiện tại hoàn thành để bày tỏ sự ngạc nhiên hoặc xác nhận việc đã xảy ra sớm."
+            },
+
+            // UNIT 2: Going to the Movies (Present Perfect with for/since; would like / would rather)
+            {
+                id: 6, unit: 2, unitTitle: "Unit 2: Going to the Movies",
+                grammar: "Present Perfect (How long / since)",
+                sentence: "How long have you waited in line for movie tickets?",
+                vietnamese: "Bạn đã xếp hàng chờ mua vé xem phim bao lâu rồi?",
+                explanation: "Dùng 'How long + have/has + S + V3/ed (waited)...?' để hỏi về khoảng thời gian kéo dài từ quá khứ đến hiện tại."
+            },
+            {
+                id: 7, unit: 2, unitTitle: "Unit 2: Going to the Movies",
+                grammar: "Would rather (Preferences)",
+                sentence: "Would you rather watch a comedy or an action film?",
+                vietnamese: "Bạn thích xem phim hài hay phim hành động hơn?",
+                explanation: "Cấu trúc hỏi sở thích lựa chọn ở Unit 2: 'Would you rather + V nguyên mẫu (watch) + A + or + B?'."
+            },
+            {
+                id: 8, unit: 2, unitTitle: "Unit 2: Going to the Movies",
+                grammar: "Would like (Invitations)",
+                sentence: "Would you like to see the new animated movie tonight?",
+                vietnamese: "Tối nay bạn có muốn đi xem bộ phim hoạt hình mới không?",
+                explanation: "Lời mời lịch sự dùng 'Would you like + to V (to see)...?' theo sau là tân ngữ chỉ thể loại phim (animated movie)."
+            },
+            {
+                id: 9, unit: 2, unitTitle: "Unit 2: Going to the Movies",
+                grammar: "Present Perfect (For / Since)",
+                sentence: "Has that sci-fi movie been in theaters since last Friday?",
+                vietnamese: "Bộ phim khoa học viễn tưởng đó đã chiếu ở rạp từ thứ Sáu tuần trước phải không?",
+                explanation: "Thì Hiện tại hoàn thành với mốc thời gian 'since last Friday' dùng 'Has + S + been...'."
+            },
+            {
+                id: 10, unit: 2, unitTitle: "Unit 2: Going to the Movies",
+                grammar: "Wh-Question (Movie Genres)",
+                sentence: "What kind of movies would you rather stream at home?",
+                vietnamese: "Bạn thích xem trực tuyến thể loại phim nào ở nhà hơn?",
+                explanation: "Từ để hỏi 'What kind of + danh từ số nhiều' kết hợp với 'would you rather + V nguyên mẫu (stream)'."
+            },
+
+            // UNIT 3: Staying in Hotels (Future with will; Real conditional; Hotel room amenities & services)
+            {
+                id: 11, unit: 3, unitTitle: "Unit 3: Staying in Hotels",
+                grammar: "Future with Will (Requests)",
+                sentence: "Will housekeeping bring extra towels to our suite soon?",
+                vietnamese: "Bộ phận dọn phòng sẽ sớm mang thêm khăn tắm lên phòng suite của chúng ta chứ?",
+                explanation: "Câu hỏi tương lai đơn với 'Will + S + V nguyên mẫu (bring)...?' dùng trong tình huống yêu cầu dịch vụ khách sạn."
+            },
+            {
+                id: 12, unit: 3, unitTitle: "Unit 3: Staying in Hotels",
+                grammar: "Polite Request (May I)",
+                sentence: "May I leave a message for the hotel manager please?",
+                vietnamese: "Xin phép cho tôi để lại lời nhắn cho quản lý khách sạn được không ạ?",
+                explanation: "Chiến lược giao tiếp Unit 3: Dùng 'May I + V nguyên mẫu (leave)...?' để xin phép hoặc yêu cầu một cách trang trọng."
+            },
+            {
+                id: 13, unit: 3, unitTitle: "Unit 3: Staying in Hotels",
+                grammar: "Real Conditional (Question)",
+                sentence: "What will we do if the hotel has no vacancies?",
+                vietnamese: "Chúng ta sẽ làm gì nếu khách sạn hết phòng trống?",
+                explanation: "Câu điều kiện có thật ở tương lai (Real Conditional): Mệnh đề chính hỏi 'What will + S + V', mệnh đề 'if' chia Hiện tại đơn ('has')."
+            },
+            {
+                id: 14, unit: 3, unitTitle: "Unit 3: Staying in Hotels",
+                grammar: "Future with Will (Wh-Question)",
+                sentence: "What time will the airport shuttle pick us up tomorrow?",
+                vietnamese: "Ngày mai xe đưa đón sân bay sẽ đón chúng ta lúc mấy giờ?",
+                explanation: "Câu hỏi giờ ở thì tương lai: 'What time + will + S + V nguyên mẫu (pick up)...?'."
+            },
+            {
+                id: 15, unit: 3, unitTitle: "Unit 3: Staying in Hotels",
+                grammar: "Real Conditional (Yes/No)",
+                sentence: "Will you book a double room if the rate is cheaper?",
+                vietnamese: "Bạn sẽ đặt phòng đôi nếu mức giá rẻ hơn chứ?",
+                explanation: "Câu hỏi Yes/No điều kiện loại 1: 'Will + S + V (book)... + if + S + V hiện tại (is)...?'."
+            },
+
+            // UNIT 4: Cars and Driving (Past continuous vs. Simple past; Phrasal verbs; Car accidents & parts)
+            {
+                id: 16, unit: 4, unitTitle: "Unit 4: Cars and Driving",
+                grammar: "Past Continuous (Interrupted Action)",
+                sentence: "Were you speeding when the other car hit your bumper?",
+                vietnamese: "Lúc chiếc xe kia đâm vào cản xe của bạn thì bạn có đang chạy quá tốc độ không?",
+                explanation: "Hành động đang diễn ra trong quá khứ dùng Quá khứ tiếp diễn ('Were you speeding'), hành động xen vào sau 'when' dùng Quá khứ đơn ('hit')."
+            },
+            {
+                id: 17, unit: 4, unitTitle: "Unit 4: Cars and Driving",
+                grammar: "Past Continuous (Wh-Question)",
+                sentence: "What were they doing while the mechanic fixed the engine?",
+                vietnamese: "Họ đang làm gì trong khi thợ máy sửa động cơ xe?",
+                explanation: "Câu hỏi Quá khứ tiếp diễn: 'What + were + S + V-ing (doing)...?' diễn tả hành động song song trong quá khứ."
+            },
+            {
+                id: 18, unit: 4, unitTitle: "Unit 4: Cars and Driving",
+                grammar: "Phrasal Verbs (Driving)",
+                sentence: "Did you remember to fill up the gas tank before leaving?",
+                vietnamese: "Bạn đã nhớ đổ đầy bình xăng trước khi rời đi chưa?",
+                explanation: "Cụm động từ Unit 4 'fill up' (đổ đầy) đi với tân ngữ 'the gas tank' trong câu hỏi Quá khứ đơn ('Did you remember...')."
+            },
+            {
+                id: 19, unit: 4, unitTitle: "Unit 4: Cars and Driving",
+                grammar: "Simple Past (Car Rental)",
+                sentence: "Which compact car did you rent for your weekend trip?",
+                vietnamese: "Bạn đã thuê chiếc xe cỡ nhỏ nào cho chuyến đi cuối tuần của mình?",
+                explanation: "Câu hỏi Wh- ở thì Quá khứ đơn: 'Which + danh từ + did + S + V nguyên mẫu (rent)?'."
+            },
+            {
+                id: 20, unit: 4, unitTitle: "Unit 4: Cars and Driving",
+                grammar: "Phrasal Verbs (Pronoun Object)",
+                sentence: "When are you going to drop off the rental car?",
+                vietnamese: "Khi nào bạn sẽ trả lại chiếc xe thuê?",
+                explanation: "Cụm động từ 'drop off' (trả xe/trả khách) kết hợp với cấu trúc tương lai gần 'When are you going to + V?'."
+            },
+
+            // UNIT 5: Personal Care and Appearance (Quantifiers: some, any, much, many, a lot of; Indefinite pronouns)
+            {
+                id: 21, unit: 5, unitTitle: "Unit 5: Personal Care and Appearance",
+                grammar: "Quantifiers (How much)",
+                sentence: "How much sunscreen do we need for our beach vacation?",
+                vietnamese: "Chúng ta cần bao nhiêu kem chống nắng cho kỳ nghỉ ở bãi biển?",
+                explanation: "'Sunscreen' (kem chống nắng) là danh từ không đếm được nên dùng 'How much + N + do/does + S + need?'."
+            },
+            {
+                id: 22, unit: 5, unitTitle: "Unit 5: Personal Care and Appearance",
+                grammar: "Quantifiers (Any)",
+                sentence: "Are there any hair salons open near the shopping mall?",
+                vietnamese: "Có tiệm làm tóc nào đang mở cửa gần trung tâm mua sắm không?",
+                explanation: "Dùng 'any' trong câu hỏi với danh từ đếm được số nhiều ('hair salons'): 'Are there any + N số nhiều...?'."
+            },
+            {
+                id: 23, unit: 5, unitTitle: "Unit 5: Personal Care and Appearance",
+                grammar: "Indefinite Pronouns (Anyone)",
+                sentence: "Can anyone recommend a good spa for a relaxing massage?",
+                vietnamese: "Có ai có thể giới thiệu một spa tốt để mát-xa thư giãn không?",
+                explanation: "Đại từ bất định 'anyone' được dùng làm chủ ngữ trong câu hỏi chung chung với động từ khuyết thiếu 'Can'."
+            },
+            {
+                id: 24, unit: 5, unitTitle: "Unit 5: Personal Care and Appearance",
+                grammar: "Quantifiers (How many)",
+                sentence: "How many bottles of shampoo did you buy at the store?",
+                vietnamese: "Bạn đã mua bao nhiêu chai dầu gội đầu ở cửa hàng?",
+                explanation: "Khi có đơn vị đếm 'bottles', ta dùng 'How many + danh từ đếm được số nhiều + did + S + V?'."
+            },
+            {
+                id: 25, unit: 5, unitTitle: "Unit 5: Personal Care and Appearance",
+                grammar: "Indefinite Pronouns (Anything)",
+                sentence: "Do you need anything else from the cosmetics counter today?",
+                vietnamese: "Hôm nay bạn có cần thêm gì khác ở quầy mỹ phẩm không?",
+                explanation: "Trong câu hỏi thông thường, dùng đại từ bất định 'anything' ('Do you need anything else...?')."
+            },
+
+            // UNIT 6: Eating Well (Used to / use to; Negative Yes/No questions; Food passions & excuses)
+            {
+                id: 26, unit: 6, unitTitle: "Unit 6: Eating Well",
+                grammar: "Used to (Question Form)",
+                sentence: "Did you use to eat a lot of fast food?",
+                vietnamese: "Trước đây bạn có từng ăn nhiều đồ ăn nhanh không?",
+                explanation: "Trong câu hỏi với trợ động từ 'Did', 'used to' bỏ 'd' thành 'use to': 'Did + S + use to + V nguyên mẫu (eat)?'."
+            },
+            {
+                id: 27, unit: 6, unitTitle: "Unit 6: Eating Well",
+                grammar: "Negative Yes/No Questions",
+                sentence: "Aren't you crazy about spicy Thai food and seafood?",
+                vietnamese: "Chẳng phải bạn rất mê đồ ăn Thái cay và hải sản sao?",
+                explanation: "Câu hỏi phủ định Yes/No (Negative Yes/No question) dùng để xác nhận thông tin hoặc bày tỏ sự ngạc nhiên: 'Aren't you + tính từ...?'."
+            },
+            {
+                id: 28, unit: 6, unitTitle: "Unit 6: Eating Well",
+                grammar: "Negative Yes/No Questions (Don't)",
+                sentence: "Don't you feel like having chocolate cake for dessert?",
+                vietnamese: "Bạn không muốn ăn bánh sô-cô-la tráng miệng sao?",
+                explanation: "Dùng 'Don't you + V nguyên mẫu (feel like)...?' để mời mọc hoặc hỏi xác nhận sở thích ăn uống."
+            },
+            {
+                id: 29, unit: 6, unitTitle: "Unit 6: Eating Well",
+                grammar: "Used to (Wh-Question)",
+                sentence: "What did your family use to cook for Sunday dinner?",
+                vietnamese: "Gia đình bạn trước đây thường nấu món gì cho bữa tối Chủ nhật?",
+                explanation: "Câu hỏi Wh- về thói quen trong quá khứ: 'What + did + S + use to + V nguyên mẫu (cook)?'."
+            },
+            {
+                id: 30, unit: 6, unitTitle: "Unit 6: Eating Well",
+                grammar: "Negative Yes/No Questions (Isn't)",
+                sentence: "Isn't that grilled salmon too salty for your diet?",
+                vietnamese: "Món cá hồi nướng đó không quá mặn đối với chế độ ăn kiêng của bạn sao?",
+                explanation: "Dùng 'Isn't + danh từ số ít + tính từ...?' để nêu ý kiến và mong đợi người nghe đồng tình."
+            },
+
+            // UNIT 7: About Personality (Gerunds & Infinitives; Gerunds as objects of prepositions)
+            {
+                id: 31, unit: 7, unitTitle: "Unit 7: About Personality",
+                grammar: "Gerunds after Verbs",
+                sentence: "Do you enjoy working in a team with creative people?",
+                vietnamese: "Bạn có thích làm việc nhóm với những người sáng tạo không?",
+                explanation: "Sau động từ 'enjoy' luôn dùng danh động từ V-ing ('working'): 'Do you enjoy + V-ing...?'."
+            },
+            {
+                id: 32, unit: 7, unitTitle: "Unit 7: About Personality",
+                grammar: "Gerunds after Prepositions",
+                sentence: "Are you tired of listening to his constant complaints?",
+                vietnamese: "Bạn có chán ngấy việc phải nghe những lời phàn nàn liên tục của anh ấy không?",
+                explanation: "Tính từ + giới từ ('tired of') theo sau bởi danh động từ V-ing ('listening'): 'Are you tired of + V-ing...?'."
+            },
+            {
+                id: 33, unit: 7, unitTitle: "Unit 7: About Personality",
+                grammar: "Infinitives after Verbs",
+                sentence: "Why did she decide to change her career path suddenly?",
+                vietnamese: "Tại sao cô ấy lại quyết định thay đổi con đường sự nghiệp một cách đột ngột?",
+                explanation: "Động từ 'decide' đi kèm động từ nguyên mẫu có 'to' ('to change'): 'Why did + S + decide + to V?'."
+            },
+            {
+                id: 34, unit: 7, unitTitle: "Unit 7: About Personality",
+                grammar: "Gerunds as Objects of Prepositions",
+                sentence: "What are you most excited about doing next semester?",
+                vietnamese: "Bạn hào hứng nhất về việc làm gì trong học kỳ tới?",
+                explanation: "Cấu trúc 'excited about + V-ing (doing)' trong câu hỏi Wh- với 'What'."
+            },
+            {
+                id: 35, unit: 7, unitTitle: "Unit 7: About Personality",
+                grammar: "Infinitives after Adjectives",
+                sentence: "Is it easy for an introvert to make new friends?",
+                vietnamese: "Người hướng nội kết bạn mới có dễ dàng không?",
+                explanation: "Cấu trúc 'Is it + tính từ (easy) + for someone + to V (to make)...?' để hỏi về tính chất của một hành động."
+            },
+
+            // UNIT 8: The Arts (The passive voice: present & past; Yes/No & Wh- questions in passive)
+            {
+                id: 36, unit: 8, unitTitle: "Unit 8: The Arts",
+                grammar: "Passive Voice (Past Wh-Question)",
+                sentence: "When was this famous oil painting created by the artist?",
+                vietnamese: "Bức tranh sơn dầu nổi tiếng này được người họa sĩ sáng tác vào khi nào?",
+                explanation: "Câu hỏi bị động thì Quá khứ đơn: 'When + was + S (this famous oil painting) + V3/ed (created)?'."
+            },
+            {
+                id: 37, unit: 8, unitTitle: "Unit 8: The Arts",
+                grammar: "Passive Voice (Past Yes/No)",
+                sentence: "Were those wooden sculptures carved by hand in Vietnam?",
+                vietnamese: "Những bức tượng điêu khắc bằng gỗ đó được chạm khắc thủ công ở Việt Nam phải không?",
+                explanation: "Chủ ngữ số nhiều ('those wooden sculptures') dùng bị động quá khứ: 'Were + S + V3/ed (carved)...?'."
+            },
+            {
+                id: 38, unit: 8, unitTitle: "Unit 8: The Arts",
+                grammar: "Passive Voice (Present Simple)",
+                sentence: "Where are the best modern art exhibitions held today?",
+                vietnamese: "Các triển lãm nghệ thuật hiện đại đẹp nhất ngày nay được tổ chức ở đâu?",
+                explanation: "Câu hỏi bị động Hiện tại đơn với chủ ngữ số nhiều: 'Where + are + S + V3/ed (held)?'."
+            },
+            {
+                id: 39, unit: 8, unitTitle: "Unit 8: The Arts",
+                grammar: "Passive Voice (Who...by)",
+                sentence: "Who was that silver necklace designed by?",
+                vietnamese: "Chiếc vòng cổ bằng bạc đó được thiết kế bởi ai?",
+                explanation: "Khi hỏi tác giả ở thể bị động, 'Who' đứng đầu câu và giới từ 'by' đặt ở cuối câu: 'Who + was + S + V3/ed + by?'."
+            },
+            {
+                id: 40, unit: 8, unitTitle: "Unit 8: The Arts",
+                grammar: "Passive Voice (Material)",
+                sentence: "What material is this traditional ceramic vase made of?",
+                vietnamese: "Chiếc bình gốm truyền thống này được làm bằng chất liệu gì?",
+                explanation: "Cấu trúc bị động hỏi chất liệu (Unit 8): 'What material + is + S + made of?'."
+            },
+
+            // UNIT 9: Living in Cyberspace (Infinitive of purpose; Comparisons with as...as; Internet & computers)
+            {
+                id: 41, unit: 9, unitTitle: "Unit 9: Living in Cyberspace",
+                grammar: "Infinitive of Purpose",
+                sentence: "Why did you click on that link to download files?",
+                vietnamese: "Tại sao bạn lại nhấp vào đường liên kết đó để tải tệp tin?",
+                explanation: "Động từ nguyên mẫu chỉ mục đích 'to download' (để tải về) giải thích lý do cho hành động 'click on that link'."
+            },
+            {
+                id: 42, unit: 9, unitTitle: "Unit 9: Living in Cyberspace",
+                grammar: "Comparisons (As...as)",
+                sentence: "Is this new laptop just as fast as your desktop?",
+                vietnamese: "Chiếc máy tính xách tay mới này có nhanh ngang ngửa máy tính để bàn của bạn không?",
+                explanation: "So sánh ngang bằng với tính từ (Unit 9): 'Is + A + (just) as + tính từ (fast) + as + B?'."
+            },
+            {
+                id: 43, unit: 9, unitTitle: "Unit 9: Living in Cyberspace",
+                grammar: "Troubleshooting Request",
+                sentence: "Could you take a look at my frozen computer screen?",
+                vietnamese: "Bạn có thể xem giúp màn hình máy tính bị treo của tôi không?",
+                explanation: "Mẫu câu nhờ trợ giúp kỹ thuật (Unit 9): 'Could you take a look at + cụm danh từ...?'."
+            },
+            {
+                id: 44, unit: 9, unitTitle: "Unit 9: Living in Cyberspace",
+                grammar: "Comparisons (Not nearly as...as)",
+                sentence: "Why is the Wi-Fi connection not nearly as strong today?",
+                vietnamese: "Tại sao hôm nay kết nối Wi-Fi lại yếu hơn hẳn (không mạnh bằng) mọi khi?",
+                explanation: "Trạng từ nhấn mạnh 'not nearly' đứng trước 'as + tính từ (strong)' để diễn tả sự chênh lệch lớn."
+            },
+            {
+                id: 45, unit: 9, unitTitle: "Unit 9: Living in Cyberspace",
+                grammar: "Internet Activities (How often)",
+                sentence: "How often do you back up your important cloud documents?",
+                vietnamese: "Bạn có thường xuyên sao lưu các tài liệu quan trọng trên đám mây không?",
+                explanation: "Câu hỏi tần suất với cụm động từ công nghệ 'back up' (sao lưu dữ liệu): 'How often + do + S + back up...?'."
+            },
+
+            // UNIT 10: Ethics and Values (Unreal conditional; Whose / Possessive pronouns; Ethical choices)
+            {
+                id: 46, unit: 10, unitTitle: "Unit 10: Ethics and Values",
+                grammar: "Unreal Conditional (Question)",
+                sentence: "What would you do if you found a lost wallet?",
+                vietnamese: "Bạn sẽ làm gì nếu bạn nhặt được một chiếc ví bị đánh rơi?",
+                explanation: "Câu điều kiện không có thật ở hiện tại (Unreal Conditional - Unit 10): 'What would + S + V + if + S + V2/ed (found)...?'."
+            },
+            {
+                id: 47, unit: 10, unitTitle: "Unit 10: Ethics and Values",
+                grammar: "Whose (Possession)",
+                sentence: "Whose smartphone was left on the table in the cafe?",
+                vietnamese: "Chiếc điện thoại thông minh của ai bị bỏ quên trên bàn trong quán cà phê vậy?",
+                explanation: "Dùng 'Whose + danh từ (smartphone)' ở đầu câu để hỏi về quyền sở hữu đồ vật bị bỏ quên."
+            },
+            {
+                id: 48, unit: 10, unitTitle: "Unit 10: Ethics and Values",
+                grammar: "Unreal Conditional (Yes/No)",
+                sentence: "Would you return the extra change if a cashier undercharged you?",
+                vietnamese: "Bạn có trả lại tiền thừa nếu nhân viên thu ngân tính thiếu tiền cho bạn không?",
+                explanation: "Câu hỏi Yes/No điều kiện loại 2: 'Would + S + V (return)... + if + S + V2/ed (undercharged)...?'."
+            },
+            {
+                id: 49, unit: 10, unitTitle: "Unit 10: Ethics and Values",
+                grammar: "Possessive Pronouns",
+                sentence: "Is this black umbrella yours or does it belong to Sarah?",
+                vietnamese: "Chiếc ô màu đen này là của bạn hay là của Sarah?",
+                explanation: "Đại từ sở hữu 'yours' (= your umbrella) đứng độc lập mà không cần danh từ theo sau."
+            },
+            {
+                id: 50, unit: 10, unitTitle: "Unit 10: Ethics and Values",
+                grammar: "Unreal Conditional (Advice / Ethics)",
+                sentence: "Who would you tell if you saw someone cheating on a test?",
+                vietnamese: "Bạn sẽ báo cho ai nếu bạn thấy ai đó gian lận trong bài kiểm tra?",
+                explanation: "Câu hỏi điều kiện loại 2 về tình huống đạo đức: 'Who would + S + V (tell) + if + S + V2/ed (saw)...?'."
+            }
+        ];
+
+        // =========================================================================
+        // APPLICATION STATE
+        // =========================================================================
+        let filteredQuestions = [...questionsData];
+        let currentIndex = 0;
+        let currentUnitFilter = 'ALL';
+        let selectedTokens = [];
+        let bankTokens = [];
+        let completedSet = new Set();
+        let soundEnabled = true;
+        let projectorZoom = false;
+        let isAnsweredCorrectly = false;
+        let inputMode = 'dictation'; // 'dictation' (listen & type) | 'scramble' (word tiles)
+        let isMeaningVisible = false;
+
+        // Soft pastel styles for word chips
+        const chipStyles = [
+            "bg-purple-50 text-purple-800 border-purple-200 hover:bg-purple-100",
+            "bg-sky-50 text-sky-800 border-sky-200 hover:bg-sky-100",
+            "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100",
+            "bg-orange-50 text-orange-800 border-orange-200 hover:bg-orange-100",
+            "bg-pink-50 text-pink-800 border-pink-200 hover:bg-pink-100",
+            "bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100"
+        ];
+
+        // =========================================================================
+        // AUDIO ENGINE (TEXT-TO-SPEECH DICTATION & TONE.JS FEEDBACK)
+        // =========================================================================
+        function playSentenceAudio(rate = 1.0) {
+            const q = filteredQuestions[currentIndex];
+            if (!q) return;
+
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(q.sentence);
+                utterance.lang = 'en-US';
+                utterance.rate = rate;
+                utterance.pitch = 1.02;
+
+                // Prefer natural US/UK English voices if available
+                const voices = window.speechSynthesis.getVoices();
+                const preferredVoice = voices.find(v => v.lang.includes('en-US') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha')))
+                    || voices.find(v => v.lang.startsWith('en'));
+                if (preferredVoice) {
+                    utterance.voice = preferredVoice;
+                }
+
+                const btnIcon = document.getElementById('audio-btn-icon');
+                const btnText = document.getElementById('audio-btn-text');
+
+                utterance.onstart = () => {
+                    btnIcon.classList.add('animate-bounce');
+                    if (rate === 1.0) btnText.textContent = "Đang phát âm...";
+                };
+
+                utterance.onend = () => {
+                    btnIcon.classList.remove('animate-bounce');
+                    btnText.textContent = "Nghe câu hỏi (Chuẩn)";
+                };
+
+                utterance.onerror = () => {
+                    btnIcon.classList.remove('animate-bounce');
+                    btnText.textContent = "Nghe câu hỏi (Chuẩn)";
+                };
+
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function playTone(type) {
+            if (!soundEnabled || typeof Tone === 'undefined') return;
+            try {
+                if (Tone.context.state !== 'running') {
+                    Tone.start();
+                }
+                const synth = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: "triangle" },
+                    envelope: { attack: 0.01, decay: 0.15, sustain: 0.05, release: 0.3 }
+                }).toDestination();
+                synth.volume.value = -10;
+
+                if (type === 'pop') {
+                    synth.triggerAttackRelease("C5", "32n");
+                } else if (type === 'remove') {
+                    synth.triggerAttackRelease("A4", "32n");
+                } else if (type === 'success') {
+                    const now = Tone.now();
+                    synth.triggerAttackRelease("C5", "16n", now);
+                    synth.triggerAttackRelease("E5", "16n", now + 0.09);
+                    synth.triggerAttackRelease("G5", "16n", now + 0.18);
+                    synth.triggerAttackRelease("C6", "8n", now + 0.27);
+                } else if (type === 'error') {
+                    const now = Tone.now();
+                    synth.triggerAttackRelease("E4", "16n", now);
+                    synth.triggerAttackRelease("Eb4", "8n", now + 0.12);
+                }
+            } catch (e) {
+                // Ignore audio context restrictions if not yet interacted
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            icon.className = soundEnabled ? 'fa-solid fa-volume-high text-lg' : 'fa-solid fa-volume-xmark text-lg text-slate-400';
+        }
+
+        // =========================================================================
+        // PROJECTOR MODE & VIEW CONTROLS
+        // =========================================================================
+        function toggleProjectorMode() {
+            projectorZoom = !projectorZoom;
+            const btn = document.getElementById('zoom-btn');
+            const label = document.getElementById('zoom-label');
+            const dictationInput = document.getElementById('dictation-input');
+
+            if (projectorZoom) {
+                btn.classList.replace('bg-emerald-50/90', 'bg-emerald-600');
+                btn.classList.replace('text-emerald-700', 'text-white');
+                label.textContent = "Cỡ chữ chuẩn";
+                dictationInput.classList.add('text-2xl', 'sm:text-3xl', 'md:text-4xl');
+            } else {
+                btn.classList.replace('bg-emerald-600', 'bg-emerald-50/90');
+                btn.classList.replace('text-white', 'text-emerald-700');
+                label.textContent = "Chữ lớn";
+                dictationInput.classList.remove('text-2xl', 'sm:text-3xl', 'md:text-4xl');
+            }
+            renderChips();
+        }
+
+        function toggleInputMode() {
+            inputMode = inputMode === 'dictation' ? 'scramble' : 'dictation';
+            const dictationBox = document.getElementById('dictation-mode-container');
+            const scrambleBox = document.getElementById('scramble-mode-container');
+            const label = document.getElementById('mode-toggle-label');
+            const icon = document.querySelector('#mode-toggle-btn i');
+
+            if (inputMode === 'dictation') {
+                dictationBox.classList.remove('hidden');
+                scrambleBox.classList.add('hidden');
+                label.textContent = "Chế độ: Gõ chép chính tả";
+                icon.className = "fa-solid fa-keyboard text-teal-500";
+                document.getElementById('dictation-input').focus();
+            } else {
+                dictationBox.classList.add('hidden');
+                scrambleBox.classList.remove('hidden');
+                label.textContent = "Chế độ: Ghép thẻ từ";
+                icon.className = "fa-solid fa-puzzle-piece text-purple-500";
+            }
+        }
+
+        function toggleMeaningHint() {
+            isMeaningVisible = !isMeaningVisible;
+            const box = document.getElementById('vietnamese-meaning-box');
+            const label = document.getElementById('meaning-toggle-label');
+
+            if (isMeaningVisible) {
+                box.classList.remove('hidden');
+                label.textContent = "Ẩn nghĩa tiếng Việt";
+            } else {
+                box.classList.add('hidden');
+                label.textContent = "Hiện nghĩa tiếng Việt";
+            }
+        }
+
+        function clearDictationInput() {
+            const input = document.getElementById('dictation-input');
+            input.value = '';
+            input.classList.remove('border-emerald-400', 'bg-emerald-50/40', 'border-rose-300', 'bg-rose-50/30');
+            input.classList.add('border-purple-200', 'bg-white/95');
+            document.getElementById('feedback-box').classList.add('hidden');
+            input.focus();
+            playTone('remove');
+        }
+
+        // =========================================================================
+        // TOKENIZATION & SHUFFLING
+        // =========================================================================
+        function tokenizeSentence(sentence) {
+            return sentence.trim().split(/\s+/);
+        }
+
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            if (arr.join(' ') === array.join(' ') && arr.length > 1) {
+                return shuffleArray(array);
+            }
+            return arr;
+        }
+
+        function normalizeTextForComparison(str) {
+            return str
+                .toLowerCase()
+                .replace(/[.,!?;:'"“”‘’]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        // =========================================================================
+        // RENDER UNIT FILTER BAR
+        // =========================================================================
+        function renderUnitFilters() {
+            const bar = document.getElementById('unit-filter-bar');
+            const units = [
+                { id: 'ALL', label: 'Tất cả (50)' },
+                { id: 1, label: 'U1: Acquainted' },
+                { id: 2, label: 'U2: Movies' },
+                { id: 3, label: 'U3: Hotels' },
+                { id: 4, label: 'U4: Driving' },
+                { id: 5, label: 'U5: Personal Care' },
+                { id: 6, label: 'U6: Eating Well' },
+                { id: 7, label: 'U7: Personality' },
+                { id: 8, label: 'U8: The Arts' },
+                { id: 9, label: 'U9: Cyberspace' },
+                { id: 10, label: 'U10: Ethics' }
+            ];
+
+            bar.innerHTML = units.map(u => {
+                const isActive = currentUnitFilter === u.id;
+                const activeClasses = isActive
+                    ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-purple-500 shadow-sm'
+                    : 'bg-white/85 hover:bg-purple-50 text-slate-600 border-purple-100';
+                return `
+                    <button onclick="filterByUnit(${typeof u.id === 'string' ? `'${u.id}'` : u.id})"
+                        class="px-4 py-2 rounded-2xl border font-bold text-xs sm:text-sm whitespace-nowrap transition active:scale-95 ${activeClasses}">
+                        ${u.label}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function filterByUnit(unitId) {
+            currentUnitFilter = unitId;
+            if (unitId === 'ALL') {
+                filteredQuestions = [...questionsData];
+            } else {
+                filteredQuestions = questionsData.filter(q => q.unit === unitId);
+            }
+            currentIndex = 0;
+            renderUnitFilters();
+            loadQuestion(0);
+        }
+
+        // =========================================================================
+        // LOAD & RENDER QUESTION
+        // =========================================================================
+        function loadQuestion(index) {
+            if (index < 0 || index >= filteredQuestions.length) return;
+            currentIndex = index;
+            isAnsweredCorrectly = false;
+
+            const q = filteredQuestions[currentIndex];
+
+            // Animate card transition
+            const card = document.getElementById('question-card');
+            card.classList.remove('animate-slide-up');
+            void card.offsetWidth;
+            card.classList.add('animate-slide-up');
+
+            // Update Metadata
+            document.getElementById('q-number-badge').textContent = `Câu ${q.id} / 50`;
+            document.getElementById('unit-badge').textContent = q.unitTitle;
+            document.getElementById('grammar-badge').textContent = q.grammar;
+            document.getElementById('vietnamese-meaning').textContent = q.vietnamese;
+
+            // Reset Dictation Input
+            const dictationInput = document.getElementById('dictation-input');
+            dictationInput.value = '';
+            dictationInput.classList.remove('border-emerald-400', 'bg-emerald-50/40', 'border-rose-300', 'bg-rose-50/30');
+            dictationInput.classList.add('border-purple-200', 'bg-white/95');
+
+            // Prepare Scramble Tokens
+            const rawTokens = tokenizeSentence(q.sentence);
+            const shuffled = shuffleArray(rawTokens);
+            bankTokens = shuffled.map((word, idx) => ({
+                id: `${q.id}-${idx}-${Math.random().toString(36).substr(2, 5)}`,
+                text: word,
+                style: chipStyles[idx % chipStyles.length]
+            }));
+            selectedTokens = [];
+
+            // Hide Feedback & Reset Dropzone Border
+            const feedbackBox = document.getElementById('feedback-box');
+            feedbackBox.classList.add('hidden');
+            const answerZone = document.getElementById('answer-zone');
+            answerZone.className = "min-h-[96px] sm:min-h-[112px] rounded-3xl bg-white/95 border-2 border-dashed border-purple-200 p-4 sm:p-5 flex flex-wrap items-center gap-2.5 sm:gap-3.5 transition-colors";
+
+            // Update Prev/Next button states
+            document.getElementById('prev-btn').disabled = (currentIndex === 0);
+
+            // Update Progress Bar
+            const pct = Math.round(((currentIndex + 1) / filteredQuestions.length) * 100);
+            document.getElementById('progress-text').textContent = `Tiến độ: ${currentIndex + 1}/${filteredQuestions.length} (${pct}%)`;
+            document.getElementById('progress-bar').style.width = `${pct}%`;
+
+            renderChips();
+            updateScoreUI();
+
+            if (inputMode === 'dictation') {
+                setTimeout(() => dictationInput.focus(), 80);
+            }
+        }
+
+        function renderChips() {
+            const answerZone = document.getElementById('answer-zone');
+            const wordBank = document.getElementById('word-bank');
+
+            const sizeClasses = projectorZoom
+                ? "text-2xl sm:text-3xl md:text-4xl px-5 py-3.5 sm:px-6 sm:py-4"
+                : "text-lg sm:text-xl md:text-2xl px-4 py-2.5 sm:px-5 sm:py-3";
+
+            if (selectedTokens.length === 0) {
+                answerZone.innerHTML = `
+                    <span id="answer-placeholder" class="text-slate-300 font-display font-bold text-lg sm:text-xl select-none mx-auto">
+                        Nhấn vào các thẻ từ bên dưới để ghép câu...
+                    </span>
+                `;
+            } else {
+                answerZone.innerHTML = selectedTokens.map((token, idx) => `
+                    <button onclick="deselectToken(${idx})"
+                        class="word-chip animate-pop-in rounded-2xl border font-display font-extrabold shadow-sm ${sizeClasses} ${token.style}">
+                        ${token.text}
+                    </button>
+                `).join('');
+            }
+
+            if (bankTokens.length === 0) {
+                wordBank.innerHTML = `
+                    <span class="text-slate-400 font-semibold text-sm sm:text-base italic">
+                        Đã sử dụng tất cả các từ! Nhấn "Kiểm tra đáp án".
+                    </span>
+                `;
+            } else {
+                wordBank.innerHTML = bankTokens.map((token, idx) => `
+                    <button onclick="selectToken(${idx})"
+                        class="word-chip rounded-2xl border font-display font-extrabold shadow-sm ${sizeClasses} ${token.style}">
+                        ${token.text}
+                    </button>
+                `).join('');
+            }
+        }
+
+        // =========================================================================
+        // INTERACTION HANDLERS (SCRAMBLE & DICTATION)
+        // =========================================================================
+        function selectToken(bankIdx) {
+            if (isAnsweredCorrectly) return;
+            const [token] = bankTokens.splice(bankIdx, 1);
+            selectedTokens.push(token);
+            playTone('pop');
+            document.getElementById('feedback-box').classList.add('hidden');
+            renderChips();
+        }
+
+        function deselectToken(selectedIdx) {
+            if (isAnsweredCorrectly) return;
+            const [token] = selectedTokens.splice(selectedIdx, 1);
+            bankTokens.push(token);
+            playTone('remove');
+            document.getElementById('feedback-box').classList.add('hidden');
+            renderChips();
+        }
+
+        function resetCurrentSentence() {
+            if (bankTokens.length === 0 && selectedTokens.length === 0) return;
+            isAnsweredCorrectly = false;
+            bankTokens = shuffleArray([...bankTokens, ...selectedTokens]);
+            selectedTokens = [];
+            playTone('remove');
+            document.getElementById('feedback-box').classList.add('hidden');
+            const answerZone = document.getElementById('answer-zone');
+            answerZone.className = "min-h-[96px] sm:min-h-[112px] rounded-3xl bg-white/95 border-2 border-dashed border-purple-200 p-4 sm:p-5 flex flex-wrap items-center gap-2.5 sm:gap-3.5 transition-colors";
+            renderChips();
+        }
+
+        function giveNextWordHint() {
+            if (isAnsweredCorrectly) return;
+            const q = filteredQuestions[currentIndex];
+            const correctWords = tokenizeSentence(q.sentence);
+
+            let mismatchIndex = 0;
+            while (
+                mismatchIndex < selectedTokens.length &&
+                mismatchIndex < correctWords.length &&
+                selectedTokens[mismatchIndex].text === correctWords[mismatchIndex]
+            ) {
+                mismatchIndex++;
+            }
+
+            if (mismatchIndex < selectedTokens.length) {
+                const wrongTokens = selectedTokens.splice(mismatchIndex);
+                bankTokens.push(...wrongTokens);
+            }
+
+            if (mismatchIndex < correctWords.length) {
+                const targetWord = correctWords[mismatchIndex];
+                const bankIdx = bankTokens.findIndex(t => t.text === targetWord);
+                if (bankIdx !== -1) {
+                    const [token] = bankTokens.splice(bankIdx, 1);
+                    selectedTokens.push(token);
+                    playTone('pop');
+                    renderChips();
+                }
+            }
+        }
+
+        function checkAnswer() {
+            const q = filteredQuestions[currentIndex];
+            const feedbackBox = document.getElementById('feedback-box');
+            const iconWrap = document.getElementById('feedback-icon-wrap');
+            const icon = document.getElementById('feedback-icon');
+            const title = document.getElementById('feedback-title');
+            const correctSentenceEl = document.getElementById('feedback-correct-sentence');
+            const explanationEl = document.getElementById('feedback-explanation');
+
+            let isCorrect = false;
+            let userAttemptText = '';
+
+            if (inputMode === 'dictation') {
+                const inputEl = document.getElementById('dictation-input');
+                userAttemptText = inputEl.value.trim();
+
+                if (!userAttemptText) {
+                    inputEl.classList.add('animate-shake');
+                    setTimeout(() => inputEl.classList.remove('animate-shake'), 450);
+                    playTone('error');
+                    inputEl.focus();
+                    return;
+                }
+
+                isCorrect = normalizeTextForComparison(userAttemptText) === normalizeTextForComparison(q.sentence);
+
+                if (isCorrect) {
+                    inputEl.classList.remove('border-purple-200', 'border-rose-300', 'bg-rose-50/30');
+                    inputEl.classList.add('border-emerald-400', 'bg-emerald-50/40');
+                } else {
+                    inputEl.classList.remove('border-purple-200', 'border-emerald-400');
+                    inputEl.classList.add('border-rose-300', 'bg-rose-50/30', 'animate-shake');
+                    setTimeout(() => inputEl.classList.remove('animate-shake'), 450);
+                }
+            } else {
+                const answerZone = document.getElementById('answer-zone');
+                if (selectedTokens.length === 0) {
+                    answerZone.classList.add('animate-shake');
+                    setTimeout(() => answerZone.classList.remove('animate-shake'), 450);
+                    playTone('error');
+                    return;
+                }
+                userAttemptText = selectedTokens.map(t => t.text).join(' ');
+                isCorrect = (userAttemptText === q.sentence);
+
+                if (isCorrect) {
+                    answerZone.className = "min-h-[96px] sm:min-h-[112px] rounded-3xl bg-emerald-50/70 border-2 border-solid border-emerald-400 p-4 sm:p-5 flex flex-wrap items-center gap-2.5 sm:gap-3.5 transition-colors";
+                } else {
+                    answerZone.className = "min-h-[96px] sm:min-h-[112px] rounded-3xl bg-rose-50/70 border-2 border-solid border-rose-300 p-4 sm:p-5 flex flex-wrap items-center gap-2.5 sm:gap-3.5 transition-colors animate-shake";
+                    setTimeout(() => answerZone.classList.remove('animate-shake'), 450);
+                }
+            }
+
+            feedbackBox.classList.remove('hidden');
+            explanationEl.textContent = `${q.explanation} (Nghĩa: "${q.vietnamese}")`;
+
+            if (isCorrect) {
+                isAnsweredCorrectly = true;
+                completedSet.add(q.id);
+                updateScoreUI();
+                playTone('success');
+
+                feedbackBox.className = "mb-7 rounded-3xl p-5 sm:p-6 border border-emerald-200 bg-emerald-50/85 transition-all animate-slide-up";
+                iconWrap.className = "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-2xl bg-emerald-500 text-white shadow-sm";
+                icon.className = "fa-solid fa-circle-check";
+                title.className = "font-display font-black text-xl sm:text-2xl mb-1 text-emerald-800";
+                title.textContent = "Chính xác! Hoàn hảo!";
+                correctSentenceEl.textContent = `✓ ${q.sentence}`;
+            } else {
+                playTone('error');
+
+                feedbackBox.className = "mb-7 rounded-3xl p-5 sm:p-6 border border-rose-200 bg-rose-50/85 transition-all animate-slide-up";
+                iconWrap.className = "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-2xl bg-rose-500 text-white shadow-sm";
+                icon.className = "fa-solid fa-circle-exclamation";
+                title.className = "font-display font-black text-xl sm:text-2xl mb-1 text-rose-800";
+                title.textContent = "Chưa chính xác hoàn toàn – Hãy nghe lại hoặc đối chiếu nhé!";
+
+                if (inputMode === 'dictation') {
+                    const targetWords = normalizeTextForComparison(q.sentence).split(' ');
+                    const userWords = normalizeTextForComparison(userAttemptText).split(' ');
+                    let matchedCount = 0;
+                    targetWords.forEach((w, i) => {
+                        if (userWords[i] === w) matchedCount++;
+                    });
+                    correctSentenceEl.textContent = `Bạn đã gõ đúng ${matchedCount}/${targetWords.length} từ theo thứ tự. Hãy nghe chậm (0.75x) để kiểm tra lại chính tả!`;
+                } else {
+                    correctSentenceEl.textContent = `Câu của bạn: "${userAttemptText}"`;
+                }
+            }
+        }
+
+        function revealAnswer() {
+            const q = filteredQuestions[currentIndex];
+            const correctWords = tokenizeSentence(q.sentence);
+
+            if (inputMode === 'dictation') {
+                const inputEl = document.getElementById('dictation-input');
+                inputEl.value = q.sentence;
+                inputEl.classList.remove('border-purple-200', 'border-rose-300', 'bg-rose-50/30');
+                inputEl.classList.add('border-amber-300', 'bg-amber-50/40');
+            } else {
+                const allTokens = [...selectedTokens, ...bankTokens];
+                const orderedTokens = [];
+                correctWords.forEach(word => {
+                    const idx = allTokens.findIndex(t => t.text === word);
+                    if (idx !== -1) {
+                        orderedTokens.push(allTokens.splice(idx, 1)[0]);
+                    }
+                });
+                selectedTokens = orderedTokens;
+                bankTokens = [];
+                renderChips();
+                const answerZone = document.getElementById('answer-zone');
+                answerZone.className = "min-h-[96px] sm:min-h-[112px] rounded-3xl bg-amber-50/70 border-2 border-solid border-amber-300 p-4 sm:p-5 flex flex-wrap items-center gap-2.5 sm:gap-3.5 transition-colors";
+            }
+
+            playTone('pop');
+
+            const feedbackBox = document.getElementById('feedback-box');
+            feedbackBox.classList.remove('hidden');
+            feedbackBox.className = "mb-7 rounded-3xl p-5 sm:p-6 border border-amber-200 bg-amber-50/85 transition-all animate-slide-up";
+
+            document.getElementById('feedback-icon-wrap').className = "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-2xl bg-amber-500 text-white shadow-sm";
+            document.getElementById('feedback-icon').className = "fa-solid fa-eye";
+            document.getElementById('feedback-title').className = "font-display font-black text-xl sm:text-2xl mb-1 text-amber-800";
+            document.getElementById('feedback-title').textContent = "Đáp án mẫu:";
+            document.getElementById('feedback-correct-sentence').textContent = q.sentence;
+            document.getElementById('feedback-explanation').textContent = `${q.explanation} (Nghĩa: "${q.vietnamese}")`;
+        }
+
+        function nextQuestion() {
+            if (currentIndex < filteredQuestions.length - 1) {
+                loadQuestion(currentIndex + 1);
+            } else {
+                loadQuestion(0);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIndex > 0) {
+                loadQuestion(currentIndex - 1);
+            }
+        }
+
+        function updateScoreUI() {
+            document.getElementById('score-display').textContent = `${completedSet.size} / 50`;
+        }
+
+        // =========================================================================
+        // MODAL: ALL 50 QUESTIONS DRAWER
+        // =========================================================================
+        function toggleQuestionModal() {
+            const modal = document.getElementById('question-modal');
+            const isHidden = modal.classList.contains('hidden');
+            if (isHidden) {
+                renderModalGrid();
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function renderModalGrid() {
+            const grid = document.getElementById('modal-grid');
+            grid.innerHTML = questionsData.map(q => {
+                const isDone = completedSet.has(q.id);
+                const statusBadge = isDone
+                    ? `<span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-700"><i class="fa-solid fa-check mr-1"></i>Đã xong</span>`
+                    : `<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-50 text-purple-600">Unit ${q.unit}</span>`;
+
+                return `
+                    <button onclick="jumpToQuestion(${q.id})"
+                        class="text-left p-4 rounded-2xl border ${isDone ? 'border-emerald-200 bg-emerald-50/40' : 'border-purple-100 bg-white hover:bg-purple-50/50'} transition flex flex-col gap-1.5 shadow-sm">
+                        <div class="flex items-center justify-between w-full">
+                            <span class="font-display font-black text-indigo-600 text-base">Câu ${q.id} • ${q.grammar}</span>
+                            ${statusBadge}
+                        </div>
+                        <p class="text-sm font-semibold text-slate-600 line-clamp-1">${q.vietnamese}</p>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function jumpToQuestion(questionId) {
+            currentUnitFilter = 'ALL';
+            filteredQuestions = [...questionsData];
+            renderUnitFilters();
+            const targetIdx = filteredQuestions.findIndex(q => q.id === questionId);
+            if (targetIdx !== -1) {
+                loadQuestion(targetIdx);
+            }
+            toggleQuestionModal();
+        }
+
+        // =========================================================================
+        // KEYBOARD SHORTCUTS & INITIALIZATION
+        // =========================================================================
+        document.addEventListener('keydown', (e) => {
+            const dictationInput = document.getElementById('dictation-input');
+            if (document.activeElement === dictationInput) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    checkAnswer();
+                }
+                return;
+            }
+            if (e.key === 'ArrowRight') nextQuestion();
+            if (e.key === 'ArrowLeft') prevQuestion();
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.getVoices();
+            }
+            renderUnitFilters();
+            loadQuestion(0);
+        });
+    </script>
+</body>
+</html>
